@@ -95,7 +95,7 @@ services:
           property: connectionString
 
   # SocketCluster (Private Service)
-  - type: private_service
+  - type: pserv
     name: fleetbase-socket
     env: docker
     dockerContext: .
