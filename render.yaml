@@ -115,6 +115,7 @@ services:
     name: fleetbase-cache
     plan: starter
     region: singapore
+    ipAllowList: []
 
 databases:
   - name: fleetbase-db
