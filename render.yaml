@@ -14,7 +14,8 @@ services:
           name: fleetbase-db
           property: connectionString
       - key: REDIS_URL
-        fromKeyvalue:
+        fromService:
+          type: keyvalue
           name: fleetbase-cache
           property: connectionString
       - key: QUEUE_CONNECTION
@@ -68,7 +69,8 @@ services:
           name: fleetbase-db
           property: connectionString
       - key: REDIS_URL
-        fromKeyvalue:
+        fromService:
+          type: keyvalue
           name: fleetbase-cache
           property: connectionString
       - key: QUEUE_CONNECTION
@@ -89,7 +91,8 @@ services:
           name: fleetbase-db
           property: connectionString
       - key: REDIS_URL
-        fromKeyvalue:
+        fromService:
+          type: keyvalue
           name: fleetbase-cache
           property: connectionString
 
@@ -107,14 +110,15 @@ services:
       - key: SOCKETCLUSTER_BROKERS
         value: 1
 
+  # Managed Key Value (Redis Replacement)
+  - type: keyvalue
+    name: fleetbase-cache
+    plan: starter
+    region: singapore
+
 databases:
   - name: fleetbase-db
     databaseName: fleetbase
     user: fleetbase
-    plan: starter
-    region: singapore
-
-keyvalues:
-  - name: fleetbase-cache
     plan: starter
     region: singapore
