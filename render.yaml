@@ -5,7 +5,6 @@ services:
     env: docker
     dockerContext: .
     dockerfilePath: docker/Dockerfile
-    dockerTarget: app
     plan: starter
     region: singapore
     healthCheckPath: /
@@ -15,7 +14,7 @@ services:
           name: fleetbase-db
           property: connectionString
       - key: REDIS_URL
-        fromRedis:
+        fromKeyvalue:
           name: fleetbase-cache
           property: connectionString
       - key: QUEUE_CONNECTION
@@ -60,7 +59,7 @@ services:
     env: docker
     dockerContext: .
     dockerfilePath: docker/Dockerfile
-    dockerTarget: events
+    dockerCommand: "php artisan queue:work"
     plan: starter
     region: singapore
     envVars:
@@ -69,7 +68,7 @@ services:
           name: fleetbase-db
           property: connectionString
       - key: REDIS_URL
-        fromRedis:
+        fromKeyvalue:
           name: fleetbase-cache
           property: connectionString
       - key: QUEUE_CONNECTION
@@ -81,7 +80,7 @@ services:
     env: docker
     dockerContext: .
     dockerfilePath: docker/Dockerfile
-    dockerTarget: scheduler
+    dockerCommand: "go-crond --verbose root:./crontab"
     plan: starter
     region: singapore
     envVars:
@@ -90,20 +89,16 @@ services:
           name: fleetbase-db
           property: connectionString
       - key: REDIS_URL
-        fromRedis:
+        fromKeyvalue:
           name: fleetbase-cache
           property: connectionString
 
   # SocketCluster (Private Service)
   - type: pserv
     name: fleetbase-socket
-    env: docker
-    dockerContext: .
-    # Note: SocketCluster might need its own Dockerfile if not using the public image
-    # For now, I'll refer to the image in docker-compose if possible, 
-    # but Render Blueprint 'env: docker' requires a Dockerfile or an image field.
-    # I'll use 'env: image' for SocketCluster.
-    image: socketcluster/socketcluster:v17.4.0
+    env: image
+    image:
+      url: socketcluster/socketcluster:v17.4.0
     plan: starter
     region: singapore
     envVars:
@@ -119,7 +114,7 @@ databases:
     plan: starter
     region: singapore
 
-redis:
+keyvalues:
   - name: fleetbase-cache
     plan: starter
     region: singapore
