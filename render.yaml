@@ -1,0 +1,125 @@
+services:
+  # Fleetbase API Web Service
+  - type: web
+    name: fleetbase-api
+    env: docker
+    dockerContext: .
+    dockerfilePath: docker/Dockerfile
+    dockerTarget: app
+    plan: starter
+    region: singapore
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fleetbase-db
+          property: connectionString
+      - key: REDIS_URL
+        fromRedis:
+          name: fleetbase-cache
+          property: connectionString
+      - key: QUEUE_CONNECTION
+        value: redis
+      - key: CACHE_DRIVER
+        value: redis
+      - key: BROADCAST_DRIVER
+        value: socketcluster
+      - key: APP_URL
+        fromService:
+          type: web
+          name: fleetbase-api
+          property: host
+      - key: SESSION_DOMAIN
+        fromService:
+          type: web
+          name: fleetbase-api
+          property: host
+      - key: LOG_CHANNEL
+        value: stdout
+      - key: ENVIRONMENT
+        value: production
+
+  # Fleetbase Console Web Service
+  - type: web
+    name: fleetbase-console
+    env: docker
+    dockerContext: console
+    dockerfilePath: console/Dockerfile
+    plan: starter
+    region: singapore
+    envVars:
+      - key: API_HOST
+        fromService:
+          type: web
+          name: fleetbase-api
+          property: host
+
+  # Queue Worker
+  - type: worker
+    name: fleetbase-queue
+    env: docker
+    dockerContext: .
+    dockerfilePath: docker/Dockerfile
+    dockerTarget: events
+    plan: starter
+    region: singapore
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fleetbase-db
+          property: connectionString
+      - key: REDIS_URL
+        fromRedis:
+          name: fleetbase-cache
+          property: connectionString
+      - key: QUEUE_CONNECTION
+        value: redis
+
+  # Scheduler
+  - type: worker
+    name: fleetbase-scheduler
+    env: docker
+    dockerContext: .
+    dockerfilePath: docker/Dockerfile
+    dockerTarget: scheduler
+    plan: starter
+    region: singapore
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fleetbase-db
+          property: connectionString
+      - key: REDIS_URL
+        fromRedis:
+          name: fleetbase-cache
+          property: connectionString
+
+  # SocketCluster (Private Service)
+  - type: pvt
+    name: fleetbase-socket
+    env: docker
+    dockerContext: .
+    # Note: SocketCluster might need its own Dockerfile if not using the public image
+    # For now, I'll refer to the image in docker-compose if possible, 
+    # but Render Blueprint 'env: docker' requires a Dockerfile or an image field.
+    # I'll use 'env: image' for SocketCluster.
+    image: socketcluster/socketcluster:v17.4.0
+    plan: starter
+    region: singapore
+    envVars:
+      - key: SOCKETCLUSTER_WORKERS
+        value: 1
+      - key: SOCKETCLUSTER_BROKERS
+        value: 1
+
+databases:
+  - name: fleetbase-db
+    databaseName: fleetbase
+    user: fleetbase
+    plan: starter
+    region: singapore
+
+redis:
+  - name: fleetbase-cache
+    plan: starter
+    region: singapore
